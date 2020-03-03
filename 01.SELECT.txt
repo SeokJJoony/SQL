@@ -85,3 +85,4 @@ TO_CHAR(숫자타입,'99,999,999) -> ,표시
 SELECT salary * NVL(commission_pct,1)
 FROM emlployees
 ORDER BY commission_pct //DESC 나 ASC로 명시 안해줬을 경우 자동으로 ASC 오름차순!
+--------------------------------------------------------------------------------------------sql 118페이지까지
