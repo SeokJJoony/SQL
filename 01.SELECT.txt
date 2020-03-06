@@ -86,3 +86,44 @@ SELECT salary * NVL(commission_pct,1)
 FROM emlployees
 ORDER BY commission_pct //DESC 나 ASC로 명시 안해줬을 경우 자동으로 ASC 오름차순!
 --------------------------------------------------------------------------------------------sql 118페이지까지
+
+***2)DECODE(열 이름, 조건 값, 치환 값, 기본값) : 조건 값과 비교하여 같으면 치환 값, 틀리면 기본값으로 치환
+SELECT first_name, last_name, department_id, salary 원래급여,
+       DECODE(department_id,60, salary*1.1,salary) 조정된급여,
+       DECODE(department_id,60, '10%인상','미인상') 인상여부
+FROM employees;
+
+DECODE(열이름,조건값1, 치환값1,조건ㄱ밧2,치환값2,....,기본값) 형태로 조건 논리를 계속 이어 나갈 수 있음.
+
+3) CASE ~WHEN ~THEN ~END AS 열이름 : 조건범위가 광범위한경우 DECODE 말고 CASE문 사용 
+SELECT employee_id, first_name, last_name,salary,
+    CASE 
+        WHEN salary >= 9000 THEN '상위급여'
+        WHEN salary BETWEEN 6000 AND 8999 THEN '중위급여'
+        ELSE '실업급여'
+        END AS 급여등급
+FROM employees
+WHERE job_id = 'IT_PROG';
+(verilog와 비슷하다고 느낌)
+
+4)RANK, DENSE_RANK, ROW_NUMBER :데이터 값에 순위 매기기
+SELECT employee_id,salary,
+    RANK() OVER(ORDER BY salary DESC) RANK_급여,
+    DENSE_RANK() OVER(ORDER BY salary DESC) DENSE_RANK_급여,
+    ROW_NUMBER() OVER(ORDER BY salary DESC) ROW_NUMBER_급여
+FROM employees;
+
+RANK 함수는 공동 순위를 뛰어넘음  1등 2등 2등 4등
+DENSE_RANK 함수는 공동순위를 뛰어넘지 않음   1등 2등 2등 3등
+ROW_NUMBER 함수는 공동순위가 없음 1등 2등 3등 4등   
+
+PARTITION BY 열이름 -> 같은 속성끼리 묶임
+
+SELECT A.employee_id, A.department_id,B.department_name, salary,
+       RANK() OVER(PARTITION BY A.department_id ORDER BY salary DESC) RANK_급여,
+       DENSE_RANK() OVER(PARTITION BY A.department_id ORDER BY salary DESC) DENSE_RANK_급여,
+       ROW_NUMBER() OVER(PARTITION BY A.department_id ORDER BY salary DESC) ROW_NUMBER_급여
+    FROM employees A,departments B    //프로그래밍에서 인스턴스 생성과 같은느낌? 새로운 테이블에 복사하는 원리인지 잘모르겠다...
+    WHERE A.department_id = B.department_id
+    ORDER BY B.department_id, A.salary DESC;   
+
