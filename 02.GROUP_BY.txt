@@ -1,0 +1,9 @@
+*집계함수
+
+GROUP BY : 하나의 열을 기준으로 다른 열을 그룹화할 때 사용
+
+SELECT job_id 직무//기준열,SUM(salary) 직무별_총급여, AVG(salary) 직무별_평균급여
+FROM employees
+WHERE employee_id >= 10
+GROUP BY job_id //기준열로 그룹화
+ORDER BY 직무별_총급여 DESC, 직무별_평균급여; //직무별로 그룹화
