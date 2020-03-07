@@ -126,4 +126,12 @@ SELECT A.employee_id, A.department_id,B.department_name, salary,
     FROM employees A,departments B    //프로그래밍에서 인스턴스 생성과 같은느낌? 새로운 테이블에 복사하는 원리인지 잘모르겠다...
     WHERE A.department_id = B.department_id
     ORDER BY B.department_id, A.salary DESC;   
----------------------------------------------------------------sql 페이지까지
+---------------------------------------------------------------sql 124페이지까지
+
+*집계함수(COUNT,SUM,AVG,MAX,MIN,STDDEV...)
+COUNT(salary) : 총 행의 갯수
+SUM(salary) : 총 데이터값
+cf) 보통 NULL값은 제외되는데 포함시키고자 한다면 NVL(salary,0) 형태로 연산
+AVG(salary) : 데이터 평균
+ROUNT(AVG(salary),1) : 소숫점 두번째자리에서 반올림
+
