@@ -7,3 +7,24 @@ FROM employees
 WHERE employee_id >= 10
 GROUP BY job_id //기준열로 그룹화
 ORDER BY 직무별_총급여 DESC, 직무별_평균급여; //직무별로 그룹화
+
+SELECT job_id job_id_대그룹,
+       manager_id manager_id_중그룹, //두번 그룹화할 수있음
+       SUM(salary) 그룹핑_총급여,
+       ROUND(AVG(salary),1) 그룹핑_평균급여
+FROM employees
+WHERE employee_id >=10
+GROUP BY job_id,manager_id
+ORDER BY 그룹핑_총급여 DESC,그룹핑_평균급여; //두번 그룹화되다 보니 분류 기준 열에 중복된 데이터가 포함될 수 있음!!
+
+*HAVING 절
+GROUP BY를 통해 그룹화된 데이터에 조건을 걸때 사용
+
+SELECT job_id 직무, SUM(salary) 직무별_총급여, ROUND(AVG(salary),1) 직무별_평균급여
+FROM employees
+WHERE employee_id >= 10
+GROUP BY job_id
+HAVING SUM(salary)> 30000
+ORDER BY 직무별_총급여 DESC
+
+       
