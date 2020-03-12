@@ -7,3 +7,54 @@
 다중 행 서브쿼리 : 여러 행을 검색하는 서브쿼리
 다중 열 서브쿼리 : 하나 이상의 열을 검색하는 서브쿼리
 --------------------------------------------------------sql 169페이지까지
+
+*단일 행 서브쿼리
+서브쿼리 SELECT문에서 얻은 한 개 행의 결괏값을 메인 쿼리로 전달하는 서브쿼리
+
+SELECT *
+FROM employees A
+WHERE A.salary = ( SELECT salary
+FROM employees
+WHERE last_name = 'Taylor');
+
+오류발생 -> 테일러라는 이름을 가진 사람이 두명이상이라 단일 연산자 =을 사용했을 때 오류가남
+
+*다중 행 서브쿼리
+다중 행 연산자
+IN(10,20) -> 10이나 20이 포함
+NOT IN(10,20) -> 10이나 20이 포함되지 않음
+EXISTS(10) -> 10이 존재하면 참
+ANY(10,20) -> 10이나 20이 포함(OR)
+ALL(10,20) -> 10과 20이 포함
+
+SELECT *
+FROM employees A
+WHERE A.salary IN( SELECT MIN(salary)
+FROM employees
+GROUP BY department_id
+)
+ORDER BY A.salary DESC;
+
+*다중 열 서브쿼리
+메인쿼리와 서브쿼리를 비교하는 WHERE 조건식에서 비교되는 열이 여러 개 일 떄 사용하는 서브쿼리
+
+SELECT *
+FROM employees A
+WHERE (A.job_id,A.salary) IN( SELECT job_id, MIN(salary) //소괄호 중요***
+FROM employees
+GROUP BY job_id)
+ORDER BY A.salary DESC; //서브쿼리의 열과 메인쿼리의 열이 일대일 대응해야 가능
+
+*FROM 절 서브쿼리 인라인 뷰
+FROM 절에 서브쿼리를 사용하면 특정 조건식을 갖는 SELECT 문을 테이블 처럼 사용할 수 있음
+마치 가상 테이블, 즉 뷰와 같은 역할을 한다고 해서 인라인 뷰라고도 부름
+
+SELECT *
+FROM employees A , (SELECT department_id
+                    FROM departments
+                    WHERE department_name = 'IT') B
+WHERE A.department_id = B.department_id;   
+
+왜 인라인 뷰를 쓰는가? SELECT문을 비교적 정교하게 작성할 수 있음
+
+
