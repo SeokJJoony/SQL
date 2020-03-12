@@ -1,0 +1,43 @@
+*DML
+DML이란? 데이터를 조작하는 명령어
+트랜잭션이란? 데이터를 조작하여 저장하는 일련의 과정을 트랜잭션이라고함
+
+INSERT : 테이블에 새로운 행을 삽입
+UPDATE : 테이블에 있는 행의 내용을 갱신
+DELETE : 테이블의 행을 삭제
+
+*INSERT
+
+INSERT INTO departments(department_id, department_name, manager_id,location_id)
+VALUES (271,'Sample_Dept',200,1700);
+
+INSERT INTO departments
+VALUES (272,'Sample Dept',200,1700); //열이름 생략 가능
+
+테이블 속성과 제약조건에 주의하도록 한다
+
+데이터 조작어를 실행하고 적용하려면 최종적으로 커밋해야함
+commit;
+
+*UPDATE
+UPDATE departments
+SET manager_id = 201, location_id = 1800
+WHERE department_name = 'Sample_Dept';
+
+UPDATE departments
+SET (manager_id,location_id) = (SELECT manager_id,location_id
+                                FROM departments
+                                WHERE department_id = 40)
+WHERE department_name ='Sample_Dept'; 
+                                
+서브쿼리를 사용하여 여러개의 데이터를 갱신할 수 있음
+
+*DELETE
+데이터를 삭제할 때 사용
+
+DELETE FROM departments 
+WHERE department_id = (SELECT department_id
+                       FROM departments
+                       WHERE department_name = 'Sample_Dept');
+서브쿼리 또한 사용가능
+----------------------------------------------------------sql 193p
