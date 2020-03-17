@@ -1,0 +1,43 @@
+*DDL
+DDL이란? 테이블과 관련 열을 생성하고 변경하고 삭제하는 명령어를 데이터 정의어라고함.
+데이터 조작어는 테이블의 행을 관리
+데이터 정의어는 따로 커밋하지 않아도 데이터베이스에 즉각 반영되어 데이터 사전에 기록
+
+cf) 데이터 사전이란 일반 저장되는 데이터가 아닌 부가적인(스키마 등) 데이터들의 저장소
+
+*CREATE
+
+CREATE TABLE sample_table
+( product_id number,
+  product_name varchar(30),
+  manu_date date);
+
+INSERT INTO sample_product VALUES (1, 'television',TO_DATE('140101','YYMMDD'));
+INSERT INTO sample_product VALUES (2, 'washer',TO_DATE('150101','YYMMDD'));
+INSERT INTO sample_product VALUES (3, 'cleaner',TO_DATE('160101','YYMMDD'));
+commit;
+
+*ALTER
+열을 변경(추가,수정,삭제,이름변경)할 때 쓰임
+
+ALTER TABLE sample_product
+ADD (factory varchar2(10));
+
+이미 테이블 행에 데이터가 있는 경우 새로운 열을 만들었을 때 null값으로 초기화됨
+
+ALTER TABLE sample_product
+MODIFY (product_name varchar(5));
+
+수정 시 이미 데이터의 자료형이 바꾸려는 값보다 크면 오류가 발생
+
+*TRUNCATE
+해당 테이블의 데이터, 기억장소, 인덱스와 같은 객체가 삭제
+테이블의 구조는 남아있음
+
+TRUNCATE TABLE sample_product;
+
+*DROP
+해당 테이블의 구조까지 완전히 삭제
+
+DROP TABLE sample_product;
+
