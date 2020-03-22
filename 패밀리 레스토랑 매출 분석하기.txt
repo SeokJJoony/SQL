@@ -114,3 +114,40 @@ FROM reservation A, order_info B
 WHERE A.reserv_no = B.reserv_no(+) --AND A.cancel = 'N'  //데이터가 부족한쪽에(+)를 달아 외부조인함 --는 sql 주석처리
 GROUP BY SUBSTR(A.reserv_date,1,6)
 ORDER BY SUBSTR(A.reserv_date,1,6);
+
+*날짜 처리하기(월별 전용 상품 매출액을 일요일부터 월요일까지 구분해 출력)
+
+SELECT SUBSTR(A.reserv_date,1,6),
+       A.product_name 상품명,
+       SUM(DECODE(A.WEEK,'1',A.sales,0)) 일요일,
+       SUM(DECODE(A.WEEK,'2',A.sales,0)) 월요일,
+       SUM(DECODE(A.WEEK,'3',A.sales,0)) 화요일,
+       SUM(DECODE(A.WEEK,'4',A.sales,0)) 수요일,
+       SUM(DECODE(A.WEEK,'5',A.sales,0)) 목요일,
+       SUM(DECODE(A.WEEK,'6',A.sales,0)) 금요일,
+       SUM(DECODE(A.WEEK,'7',A.sales,0)) 토요일
+FROM (  SELECT A.reserv_date,
+        C.product_name,
+        TO_CHAR(TO_DATE(A.reserv_date,'YYYYMMDD'),'d') WEEK,
+        B.sales
+        FROM reservation A,order_info B,item C
+        WHERE A.reserv_no=B.reserv_no AND B.item_id=C.item_id AND B.item_id = 'M0001'
+        ) A  
+GROUP BY SUBSTR(A.reserv_date,1,6),A.product_name
+ORDER BY SUBSTR(A.reserv_date,1,6);
+ 
+A라는 인라인뷰를 생성, 뷰를 활용하여 요일 추출(테이블의 날짜 데이터는 텍스트 형식이므로 날짜형식으로 변환 후, 7일단위로
+변환 0:일요일 1:월요일 ....)
+
+*월별 매출 실적이 가장 높은 지점 출력
+SELECT *
+FROM
+	(SELECT SUBSTR(A.reserv_date,1,6) 날짜,
+       	          A.branch 지점,
+       	          SUM(B.sales) 총판매량,
+       	          RANK() OVER(PARTITION BY SUBSTR(A.reserv_date,1,6) ORDER BY SUM(B.sales) DESC) 지점순위
+	FROM reservation A,order_info B
+	WHERE A.reserv_no = B.reserv_no AND A.cancel ='N' AND B.item_id ='M0001'
+	GROUP BY SUBSTR(A.reserv_date,1,6), A.branch
+	ORDER BY SUBSTR(A.reserv_date,1,6)) A
+WHERE A.지점순위<=3;      
