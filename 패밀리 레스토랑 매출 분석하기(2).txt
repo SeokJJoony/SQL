@@ -25,3 +25,145 @@ ORDER BY SUM(DECODE(C.item_id,'M0001',C.sales,0)) DESC;
 개인별이니 개인의 정보를 그룹화하여 세부 사항들 조회
 테이블 관계도를 보며 테이블관계를 파악한 뒤 where절 작성하자!!
 
+*특징 분석: 거주지와 직업의 비율 분석
+상품을 구매한 전체 고객의 거주지와 전용 상품을 구매한 고객의 거주지를 각각 비교
+상품을 구매한 전체 고객의 직업과 전용 상품을 구매한 고객의 직업을 각각 비교
+필요한 테이블: reservation customer address / order_info (전용 상품 주문 고객 조회 시)
+
+SELECT b.address_detail 고객주소,b.zip_code,COUNT(b.address_detail) 카운팅 
+FROM (
+       SELECT DISTINCT A.customer_id, A.zip_code  //고객번호와 주소코드의 중복되는 부분을 하나로만 나타냄
+       FROM customer A, reservation B, order_info C
+       WHERE A.customer_id = B.customer_id AND
+             B.reserv_no = C.reserv_no AND
+             B.cancel = 'N' --AND
+             -- C.item_id = 'M0001'
+        ) A, address B
+WHERE A.zip_code = B.zip_code
+GROUP BY b.address_detail,b.zip_code
+ORDER BY COUNT(b.address_detail) DESC;
+
+전체예약고객 거주지 조회 완료
+
+*전체 고객의 직업 비율과 전용 상품을 구매한 고객의 직업 비율 비교
+필요한 테이블: customer의 job, reservation, order_info
+
+SELECT NVL(B.job,'정보없음') 고객직업,COUNT(NVL(B.job,'정보없음')) 직업수
+FROM (
+      SELECT DISTINCT A.customer_id, A.zip_code
+      FROM customer A,reservation B, order_info C
+      WHERE A.customer_id = B.customer_id AND
+            B.reserv_no = C.reserv_no AND
+            B.cancel = 'N'
+            -- AND C.item_id ='M0001'
+     ) A , customer B
+WHERE A.customer_id = B.customer_id
+GROUP BY NVL(B.job,'정보없음')
+ORDER BY COUNT(B.job) DESC;
+
+*전용 상품을 구매한 상위 10위 고객 파악
+필요한 테이블: CUSTOMER(코드랑 이름), reservation ,order_info
+
+SELECT *
+FROM
+(
+SELECT A.customer_id 고객코드,A.customer_name 고객이름,SUM(C.sales) 총매출,
+       ROW_NUMBER() OVER(PARTITION BY A.customer_id ORDER BY SUM(C.sales) ASC) 순위
+FROM customer A,reservation B, order_info C
+WHERE A.customer_id = B.customer_id AND
+      B.reserv_no = C.reserv_no AND
+      B.cancel = 'N' AND
+      C.item_id = 'M0001'
+GROUP BY A.customer_id ,C.item_id, A.customer_name
+) A
+WHERE A.순위 <=10
+ORDER BY A.순위 ASC;
+
+굳이 인라인뷰를 써야하는이유?? 속도가 빠름. 즉, 효율이 좋음
+
+ROWNUM 명령어 : 조회된 ROW의 number를 가지는 가상의 컬럼
+                        주로 paging처리, N-Top 조회시 사용
+내가 이해한 ROWNUM 명령어는 정렬된 테이블의 행에 번호를 부여하여 일부분만 출력할 수 있게 해주는 것이다.
+
+*상위 고객의 거주지
+필요한 테이블: customer, reservation, order_info, address
+
+SELECT A.주소, COUNT(A.주소) 카운팅
+FROM (
+      SELECT A.customer_id 고객코드,
+             A.customer_name 고객이름,
+             NVL(A.job,'정보없음') 직업,
+             D.address_detail 주소,
+             SUM(C.sales) 전용상품매출,
+             ROW_NUMBER() OVER(PARTITION BY C.item_id ORDER BY SUM(C.sales) DESC) 순위
+      FROM customer A, reservation B, order_info C, address D
+      WHERE A.customer_id = B.customer_id AND
+            B.reserv_no = C.reserv_no AND
+            A.zip_code = D.zip_code AND
+            B.cancel = 'N' AND
+            C.item_id = 'M0001' 
+      GROUP BY A.customer_id, C.item_id, A.customer_name,NVL(A.job,'정보없음'),D.address_detail) A
+WHERE A.순위 <=10
+GROUP BY A.주소
+ORDER BY COUNT(A.주소) DESC;
+      
+*상위 고객의 직업
+SELECT A.직업, COUNT(A.직업) 카운팅
+FROM (
+      SELECT A.customer_id 고객코드,
+             A.customer_name 고객이름,
+             NVL(A.job,'정보없음') 직업,
+             D.address_detail 주소,
+             SUM(C.sales) 전용상품매출,
+             ROW_NUMBER() OVER(PARTITION BY C.item_id ORDER BY SUM(C.sales) DESC) 순위
+      FROM customer A, reservation B, order_info C, address D
+      WHERE A.customer_id = B.customer_id AND
+            B.reserv_no = C.reserv_no AND
+            A.zip_code = D.zip_code AND
+            B.cancel = 'N' AND
+            C.item_id = 'M0001' 
+      GROUP BY A.customer_id, C.item_id, A.customer_name,NVL(A.job,'정보없음'),D.address_detail) A
+WHERE A.순위 <=10
+GROUP BY A.직업
+ORDER BY COUNT(A.직업) DESC;
+      
+*전용상품 구매 상위고객이 선호하는 두번째 상품은??
+필요한 테이블: (customer, reservation, order_info)->상위 고객 추출 item     
+최종테이블: 고객코드, 고객이름, 상품명, 상품매출
+어떻게 접근할것인가? 일단 인라인뷰를 생성하는데 전용상품고객 상위 10명을 뽑아낸다. 그리고 전용상품을 제외한 
+매출 순위를 매겨본다. 순위 중 1위 상품이 두번째로 선호하는 상품일 것이다
+
+SELECT *
+FROM (
+      SELECT A.고객아이디,A.고객이름,d.product_name 상품명,SUM(C.sales) 총매출,
+      ROW_NUMBER() OVER(PARTITION BY c.item_id ORDER BY SUM(c.sales) DESC) 순위 
+      FROM (
+            SELECT A.customer_id 고객아이디,A.customer_name 고객이름,SUM(C.sales) 총매출 
+            FROM customer A,reservation B, order_info C
+            WHERE A.customer_id = B.customer_id AND
+                  B.reserv_no=C.reserv_no AND
+                  B.cancel='N' AND
+                  C.item_id= 'M0001' 
+            GROUP BY A.customer_id,A.customer_name
+            HAVING SUM(c.sales) >= 216000
+            ) A, reservation B,order_info C,item D
+      WHERE a.고객아이디 =B.customer_id AND
+            b.reserv_no=C.reserv_no AND
+            b.cancel = 'N' AND
+            c.item_id = D.item_id AND
+            d.item_id <> 'M0001'
+      GROUP BY A.고객아이디,A.고객이름,d.product_name
+      ) A
+WHERE A.순위 = 1;
+      
+*데이터분석과정
+-탐색적 데이터 분석
+본격적인 데이터 분석 전에 데이터의 기본 구조와 기초 통계 데이터를 확인함으로써 
+분석 인사이트를 확보하고 전체적인 데이터 분석의 방향을 잡아가는 과정
+
+-전처리
+분석을 위해 데이터가 없을 때 외부 조인을 한다거나 직업 정보가 없을 때 '정보없음'으로 출력한다거나 수치
+값을 소수점 둘째 자리로 맞추는 식으로 데이터를 정규화하거나 표준화 하는 작업
+
+끝.
+
