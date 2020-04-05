@@ -1,0 +1,15 @@
+*INNER JOIN
+양쪽 모두에만 존재하는 행만을 가지고 테이블을 구성하는 방식
+NULL행이 존재하지 않음
+
+
+*NESTED LOOP JOIN
+중첩 for문과 같은 원리
+대량의 테이블을 조인하기에 비효율적
+
+*SORT MERGE JOIN
+양쪽 테이블을 먼저 Sorting을 한 뒤
+JOIN 하는 방식
+
+*HASH JOIN
+대용량 테이블을 JOIN할 때 좋음
